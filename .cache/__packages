@@ -1,1 +1,9 @@
 base
+caTools
+ggplot2
+gplots
+knitr
+pROC
+ROCR
+shiny
+slidify

@@ -4,7 +4,7 @@
   <title>Developing Data Product - Slidify</title>
   <meta charset="utf-8">
   <meta name="description" content="Developing Data Product - Slidify">
-  <meta name="author" content="me">
+  <meta name="author" content="R Bisaria">
   <meta name="generator" content="slidify" />
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta http-equiv="X-UA-Compatible" content="chrome=1">
@@ -13,7 +13,9 @@
     media="only screen and (max-device-width: 480px)" >
   <link rel="stylesheet" href="libraries/frameworks/io2012/css/slidify.css" >
   <link rel="stylesheet" href="libraries/highlighters/highlight.js/css/tomorrow.css" />
-  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="./assets/css/ribbons.css"></link>
+  <base target="_blank"> <!-- This amazingness opens all links in a new tab. -->  <link rel=stylesheet href="libraries/widgets/quiz/css/demo.css"></link>
+<link rel=stylesheet href="libraries/widgets/bootstrap/css/bootstrap.css"></link>
+<link rel=stylesheet href="./assets/css/ribbons.css"></link>
 
   
   <!-- Grab CDN jQuery, fall back to local if offline -->
@@ -33,8 +35,8 @@
         <slide class="title-slide segue nobackground">
   <hgroup class="auto-fadein">
     <h1>Developing Data Product - Slidify</h1>
-    <h2>Test Test</h2>
-    <p>me<br/></p>
+    <h2>10-Year Heart Attack Risk Assessment</h2>
+    <p>R Bisaria<br/></p>
   </hgroup>
   <article></article>  
 </slide>
@@ -43,16 +45,57 @@
     <!-- SLIDES -->
     <slide class="" id="slide-1" style="background:;">
   <hgroup>
-    <h2>Slide 1</h2>
+    <h3><code>The Framingham Heart Study</code></h3>
   </hgroup>
   <article data-timings="">
-    <pre><code class="r">y &lt;- 1
-x &lt;- 3
-z &lt;- x + y
-z
+    <p>The Framingham Heart Study is considered to be one of the most important epidemiological studies ever conducted. Its underlying analytics have had huge impact on our understanding of cardiovascular disease.</p>
+
+<p>A better understanding of the risk factors that increase the chance of cardiovascular disease can be a key to successful prediction and prevention of this disease.</p>
+
+<ul>
+<li>Demograhic risk factor : age, sex, education etc.</li>
+<li>Behavioral Risk factor : Smokes, cigarettes per day etc.</li>
+<li>Medical risk factors : Blood pressure, diabetes etc.</li>
+</ul>
+
+<p>The study started in 1948 and followed 5209 patients, aged 30-59, for a number of years with every 2 yearly collection of data based on an extensive questionnaire, which was continuosly evaluated and expanded over time. It collected and documented patients&#39; physical, behavioral and medical test data. </p>
+
+<p><a href="https://biolincc.nhlbi.nih.gov/static/studies/teaching/framdoc.pdf">The Framingham Heart Study data</a> has since been used to predict and prevent heart disease.</p>
+
+  </article>
+  <!-- Presenter Notes -->
+</slide>
+
+<slide class="class" id="id" style="background:;">
+  <hgroup>
+    <h3><code>Analytics to Prevent Heart Disease</code></h3>
+  </hgroup>
+  <article data-timings="">
+    <ul>
+<li><p>Read dataset from csv file</p></li>
+<li><p>Randomly split data into training and test set</p></li>
+</ul>
+
+<pre><code class="r">split = sample.split(framingham$TenYearCHD, SplitRatio = 0.7)
+train = subset(framingham, split==TRUE)
+test = subset(framingham, split==FALSE)
 </code></pre>
 
-<pre><code>## [1] 4
+<ul>
+<li>Identify <code>Risk Factors</code> using training data using logistic regression</li>
+</ul>
+
+<pre><code class="r">framinghamLog = glm(TenYearCHD ~ ., data = train, family=binomial)
+summary(framinghamLog)
+</code></pre>
+
+<ul>
+<li>Create model for prediction using only the significant variables. </li>
+</ul>
+
+<pre><code class="r">framinghamLog = glm(TenYearCHD ~ male+age+currentSmoker+BPMeds+totChol+sysBP, 
+                    data = framingham, 
+                    family=binomial)
 </code></pre>
 
   </article>
@@ -61,11 +104,38 @@ z
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Slide 2</h2>
+    <h3><code>Analytics to Prevent Heart Disease (contd.)</code></h3>
   </hgroup>
   <article data-timings="">
-    <pre><code>z
+    <ul>
+<li>Validate model using test data</li>
+</ul>
+
+<pre><code class="r">predictTest = predict(framinghamLog, type=&quot;response&quot;, newdata=test)
+table(test$TenYearCHD, predictTest &gt; 0.5)   # Confusion matrix with threshold of 0.5
 </code></pre>
+
+<pre><code>##    
+##     FALSE TRUE
+##   0  1050    5
+##   1   177    6
+</code></pre>
+
+<ul>
+<li>Accuracy: </li>
+</ul>
+
+<pre><code>## [1] 0.8301887
+</code></pre>
+
+<ul>
+<li>AUC: </li>
+</ul>
+
+<pre><code>## [1] 0.7341828
+</code></pre>
+
+<p>As these values are reasonaly good, we can go ahead and try prediction.</p>
 
   </article>
   <!-- Presenter Notes -->
@@ -73,22 +143,26 @@ z
 
 <slide class="class" id="id" style="background:;">
   <hgroup>
-    <h2>Slide 3</h2>
+    <h3><code>10-Year Heart Attack Risk Assessment App</code></h3>
   </hgroup>
   <article data-timings="">
-    <pre><code class="r">z
-</code></pre>
+    <p><a href="https://bisaria.shinyapps.io/DataProducts_PeerAssessment">This app</a> tries to predict 10-year heart attack risk using data from Framingham Heart Study. </p>
 
-<pre><code>## [1] 4
-</code></pre>
+<p>The user is required to enter the following information:</p>
 
-  </article>
-  <!-- Presenter Notes -->
-</slide>
+<ul>
+<li>Age</li>
+<li>Gender</li>
+<li>Total Cholestrol Level in mg/dL</li>
+<li>Systolic Blood Pressure, which is the first number from a BP reading.</li>
+<li>Does he smoke?</li>
+<li>Is he under any BP medication?</li>
+</ul>
 
-<slide class="class" id="id" style="background:;">
-  <article data-timings="">
-    
+<p>Based on these informations, the app tries to predict if the user has any risk of developing heart disease in 10 years time. If the probabilty of risk is more than 50%, the app generates a warning.</p>
+
+<p>Disclaimer: This app has been prepared only for academic purposes.</p>
+
   </article>
   <!-- Presenter Notes -->
 </slide>
@@ -99,25 +173,25 @@ z
     <ul>
       <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=1 title='Slide 1'>
+        data-slide=1 title='<code>The Framingham Heart Study</code>'>
          1
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=2 title='Slide 2'>
+        data-slide=2 title='<code>Analytics to Prevent Heart Disease</code>'>
          2
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=3 title='Slide 3'>
+        data-slide=3 title='<code>Analytics to Prevent Heart Disease (contd.)</code>'>
          3
       </a>
     </li>
     <li>
       <a href="#" target="_self" rel='tooltip' 
-        data-slide=4 title=''>
+        data-slide=4 title='<code>10-Year Heart Attack Risk Assessment App</code>'>
          4
       </a>
     </li>
@@ -130,7 +204,32 @@ z
   <![endif]-->
 </body>
   <!-- Load Javascripts for Widgets -->
-  
+  <script src="libraries/widgets/quiz/js/jquery.quiz.js"></script>
+<script src="libraries/widgets/quiz/js/mustache.min.js"></script>
+<script src="libraries/widgets/quiz/js/quiz-app.js"></script>
+<script src="libraries/widgets/bootstrap/js/bootstrap.min.js"></script>
+<script src="libraries/widgets/bootstrap/js/bootbox.min.js"></script>
+
+  <!-- MathJax: Fall back to local if CDN offline but local image fonts are not supported (saves >100MB) -->
+  <script type="text/x-mathjax-config">
+    MathJax.Hub.Config({
+      tex2jax: {
+        inlineMath: [['$','$'], ['\\(','\\)']],
+        processEscapes: true
+      }
+    });
+  </script>
+  <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+  <!-- <script src="https://c328740.ssl.cf1.rackcdn.com/mathjax/2.0-latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML">
+  </script> -->
+  <script>window.MathJax || document.write('<script type="text/x-mathjax-config">MathJax.Hub.Config({"HTML-CSS":{imageFont:null}});<\/script><script src="libraries/widgets/mathjax/MathJax.js?config=TeX-AMS-MML_HTMLorMML"><\/script>')
+</script>
+<script>  
+  $(function (){ 
+    $("#example").popover(); 
+    $("[rel='tooltip']").tooltip(); 
+  });  
+  </script>  
   <!-- LOAD HIGHLIGHTER JS FILES -->
   <script src="libraries/highlighters/highlight.js/highlight.pack.js"></script>
   <script>hljs.initHighlightingOnLoad();</script>
